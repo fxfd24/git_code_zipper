@@ -39,10 +39,11 @@ def download_file(file_id, file_name):
         # print(f"File downloaded: {file_name}")
         count_files = list_files_in_zip(file_name)
         # print(f'count_files : {count_files}')
+        return count_files
     else:
         print(f"Skipping file: {file_name} (not a zip archive)")
 
-    return count_files
+    
 
 def list_files_in_zip(zip_file_name):
     with zipfile.ZipFile(zip_file_name, 'r') as zip_file:
