@@ -175,6 +175,7 @@ async def handler(event):
 				pares = extract_constructionInfo_from_zip(path)
 				print(f'message_id: {message_id}, count_files : {count_files}, pares : {pares}')
 				os.remove(path)
+				print(f'Удалил {path}')
 			elif is_rar_file(path):
 				# Скачиваем документ
 				await client.download_media(document, file=path)
@@ -219,10 +220,6 @@ async def handler(event):
 				pass
 			else:
 				caption = 'Отсутсвует'     
-
-			# if 'none' not in pares.lower():
-			#     # print(pares)
-			#     send_message(TOKEN,update["message"]["from"]["id"], f'{file_name}\n{pares}')
 			emoji = '⏳'
 			date_unix = datetime.datetime.now()
 			# Прибавление 3 часов
