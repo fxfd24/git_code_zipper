@@ -202,7 +202,7 @@ async def handler(event):
 			if file_name[0].isdigit():
 				number = file_name[0:8]
 				file_name_unix = file_name[8::]
-				result = [x for x in file_name_unix.split("_") if x]
+				result = [x for x in re.split(r'[_-]', file_name_unix) if x]
 				if len(result) == 3:
 					pac = result[0]
 					med = result[1]
