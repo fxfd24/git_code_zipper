@@ -16,6 +16,8 @@ from gspread_formatting.dataframe import format_with_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
 import textdistance
 
+from collections import OrderedDict
+
 api_id = '27857864'
 api_hash = '3224d8685a163fbaafc782f30e95937f'
 bot_token = '7372987398:AAFpA4weK_NXtCjrn5gnmeFp3lVwE_RVw0s'
@@ -41,7 +43,7 @@ print('Google Excel Connected Successfully')
 
 emoji_list = {'❤️':'Работа готова','🤬':'Брак конструкции (ошибка в модели)','💔':'Брак модели (проблема с печатью)','😡':'Частично в работе','🤔':'Решаем проблему',}
 client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
-
+print('TelegramClient Connected Successfully')
 # Словарь для хранения информации о реакциях на сообщения
 message_reactions = {}
 
@@ -190,6 +192,7 @@ async def handler(event):
 				count_files = 1
 				pares = '.stl, NoneConstructionInfo'
 				print(f'count_files : {count_files}, pares : {pares}')
+				os.remove(path)
 			else:
 				print(f"Skipping file: {file_name} (not a zip or archive)")
 
@@ -222,7 +225,10 @@ async def handler(event):
 			#     send_message(TOKEN,update["message"]["from"]["id"], f'{file_name}\n{pares}')
 			emoji = '⏳'
 			date_unix = datetime.datetime.now()
-			date_normal = date_unix.strftime("%d-%m-%Y %H:%M")
+			# Прибавление 3 часов
+			date_unix_plus_3_hours = date_unix + datetime.timedelta(hours=3)
+			# Преобразование в строковый формат
+			date_normal = date_unix_plus_3_hours.strftime("%d-%m-%Y %H:%M")
 			#_____первая____запись_____документа_____
 			new_row = [message_id, file_name, number, pac, med, tip, per, count_files, emoji, 'none', 'none', date_normal,'none',caption, pares]
 			columns = ['sms_id', 'Имя файла', 'Номер наряда', 'Пациент', 'Врач', 'Тип', 'Перевыпуск', 'Кол-во файлов', 'emoji', 'Техник', 'Характеристика', 
@@ -241,29 +247,90 @@ async def handler(event):
 		# Запоминаем id сообщения для дальнейшего использования при обработке реакций
 		message_reactions[message_id] = {'old_reactions': [], 'new_reactions': []}
 	elif isinstance(event, UpdateBotMessageReaction):
+		print(event)
 		char = ''
 		date_finish = ''
 		date_unix = datetime.datetime.now()
-		date_normal = date_unix.strftime("%d-%m-%Y %H:%M")
+		# Прибавление 3 часов
+		date_unix_plus_3_hours = date_unix + datetime.timedelta(hours=3)
+		# Преобразование в строковый формат
+		date_normal = date_unix_plus_3_hours.strftime("%d-%m-%Y %H:%M")
 		sms_id = event.msg_id
+		user_tg = event.actor.user_id
+		# print(user_tg)
 		emoji = ''
 		list_old_e = []
 		message_id = event.msg_id
+
 		if message_id in message_reactions:
-			old_reactions = message_reactions[message_id]['old_reactions']
-			new_reactions = message_reactions[message_id]['new_reactions']
+			# print(f'{[reaction.emoticon for reaction in event.old_reactions]}')
+			# print(f'{[reaction.emoticon for reaction in event.new_reactions]}')
+			old_reactions = [reaction.emoticon for reaction in event.old_reactions]
+			new_reactions = [reaction.emoticon for reaction in event.new_reactions]
 			# Извлекаем символы реакций и добавляем их в список
-			old_reactions.extend([reaction.emoticon for reaction in event.old_reactions])
-			new_reactions.extend([reaction.emoticon for reaction in event.new_reactions])
+			# old_reactions.extend([reaction.emoticon for reaction in event.old_reactions])
+			# new_reactions.extend([reaction.emoticon for reaction in event.new_reactions])
 			message_reactions[message_id]['old_reactions'] = old_reactions
 			message_reactions[message_id]['new_reactions'] = new_reactions
 			print(f"Reactions for message ID {message_id}:")
 			print(f"Old reactions: {old_reactions}")
 			print(f"New reactions: {new_reactions}")
 			# Вывод текущей реакции на сообщении
-			current_reactions = list(set(new_reactions) - set(old_reactions))
-			print(f"Current reaction on message ID {message_id}: {current_reactions}")
+			# current_reactions = list(set(new_reactions) - set(old_reactions))
+			# print(f"Current reaction on message ID {message_id}: {current_reactions}")
 			# if len(current_reactions) != 0:
+			if len(new_reactions) != 0:
+				for i in range(len(old_reactions)):
+					list_old_e.append(old_reactions[i])
+				for i in range(len(new_reactions)):
+					if new_reactions[i] not in list_old_e:
+						# print(update["message_reaction"]["new_reaction"][i]["emoji"])
+						if new_reactions[i] == '❤':
+							char += f'❤️ - {emoji_list['❤️']}'
+							date_finish += f'{date_normal}'
+							# print(emoji_list['❤️'])
+						elif new_reactions[i] == '🤬':
+							char += f'🤬 - {emoji_list['🤬']}'
+							# print(emoji_list['🤬'])
+						elif new_reactions[i] == '💔':
+							char += f'💔 - {emoji_list['💔']}'
+							# print(emoji_list['💔'])
+						elif new_reactions[i] == '😡':
+							char += f'😡 - {emoji_list['😡']}'
+							# print(emoji_list['😡'])
+						elif new_reactions[i] == '🤔':
+							char += f'🤔 - {emoji_list['🤔']}'
+							# print(emoji_list['🤔'])
+
+				for i in range(len(new_reactions)):
+					emoji += new_reactions[i]
+					print(f'sms_id : {sms_id}, message_reaction : {emoji}, char :{char}')
+			else:
+				emoji = '⏳'
+				print(f'sms_id : {sms_id}, message_reaction : {emoji}, char :{char}')
+
+			# Читаем таблицу
+			df = pd.DataFrame(worksheet.get_all_records())
+			# df = pd.read_excel('temp.xlsx')
+			list_sms_id = df['sms_id'].tolist()
+			if sms_id in list_sms_id:
+				row_index = list_sms_id.index(sms_id)
+				df.loc[row_index, 'emoji'] = emoji
+				if char:
+					# print(f'{char} - {update["message_reaction"]["user"]["username"]} - {date_normal}')
+					if df['Характеристика'][row_index] == 'none':
+						df.loc[row_index, 'Характеристика'] = f'{char} from user_id: {user_tg} - {date_normal}'
+					else:
+						df.loc[row_index, 'Характеристика'] = f'{df['Характеристика'][row_index]}\n{char} from user_id: {user_tg} - {date_normal}'
+				if df['Техник'][row_index] == 'none':
+					df.loc[row_index, 'Техник'] = f'user_id: {user_tg}'
+				if date_finish:
+					df.loc[row_index, 'Готова фактически'] = f'{date_finish}'
+
+			set_with_dataframe(worksheet, df)
+			format_with_dataframe(worksheet, df, include_column_header=True) #записать
+			print('Записал Реакцию')
+			# df.to_excel('temp.xlsx', index= False )
 
 client.start()
 client.run_until_disconnected()
