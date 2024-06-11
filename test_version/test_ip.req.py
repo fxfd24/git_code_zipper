@@ -29,7 +29,7 @@ creds_sheets = ServiceAccountCredentials.from_json_keyfile_name(googleJsonPath, 
 gs = gspread.authorize(creds_sheets)
 sh = gs.open('Botick_memory')
 worksheet = sh.sheet1
-worksheet.clear()
+# worksheet.clear()
 
 data = {'sms_id': [], 'Имя файла': [], 'Номер наряда': [], 'Пациент': [], 'Врач': [], 'Тип': [], 'Перевыпуск': [], 'Кол-во файлов': [], 'emoji': [], 'Техник': [], 'Характеристика': [],'Дата появления в чате': [],'Готова фактически': [],'Комментарий':[],'Number - ImplantLibraryEntryDescriptor':[]}
 df_ = pd.DataFrame(data)
