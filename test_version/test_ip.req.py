@@ -233,7 +233,7 @@ async def handler(event):
 							'Number - ImplantLibraryEntryDescriptor']
 			df = pd.DataFrame(worksheet.get_all_records()) #получить
 			df_ = pd.DataFrame([new_row], columns=columns)
-			updated_df = pd.concat([df_, df], ignore_index=True)
+			updated_df = pd.concat([df, df_], ignore_index=True)
 			set_with_dataframe(worksheet, updated_df)
 			format_with_dataframe(worksheet, updated_df, include_column_header=True) #записать
 			print('Записал')
