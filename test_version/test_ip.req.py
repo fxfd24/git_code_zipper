@@ -234,7 +234,7 @@ async def handler(event):
 			columns = ['sms_id', 'Имя файла', 'Номер наряда', 'Пациент', 'Врач', 'Тип', 'Перевыпуск', 'Кол-во файлов', 'emoji', 'Техник', 'Характеристика', 
 							'Дата появления в чате', 'Готова фактически', 'Комментарий', 
 							'Number - ImplantLibraryEntryDescriptor']
-			df = pd.DataFrame(worksheet.get_all_records()) #получить
+			df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns)) #получить
 			df_ = pd.DataFrame([new_row], columns=columns)
 			updated_df = pd.concat([df, df_], ignore_index=True)
 			set_with_dataframe(worksheet, updated_df)
