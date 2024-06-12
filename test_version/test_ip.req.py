@@ -34,7 +34,10 @@ worksheet = sh.sheet1
 data = {'sms_id': [], 'Имя файла': [], 'Номер наряда': [], 'Пациент': [], 'Врач': [], 'Тип': [], 'Перевыпуск': [], 'Кол-во файлов': [], 'emoji': [], 'Техник': [], 'Характеристика': [],'Дата появления в чате': [],'Готова фактически': [],'Комментарий':[],'Number - ImplantLibraryEntryDescriptor':[]}
 df_ = pd.DataFrame(data)
 
-df = pd.DataFrame(worksheet.get_all_records()) #получить
+columns = ['sms_id', 'Имя файла', 'Номер наряда', 'Пациент', 'Врач', 'Тип', 'Перевыпуск', 'Кол-во файлов', 'emoji', 'Техник', 'Характеристика', 
+							'Дата появления в чате', 'Готова фактически', 'Комментарий', 
+							'Number - ImplantLibraryEntryDescriptor']
+df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns)) #получить
 #df_ = 
 set_with_dataframe(worksheet, df_)
 format_with_dataframe(worksheet, df_, include_column_header=True) #записать
