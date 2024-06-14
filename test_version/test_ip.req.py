@@ -310,6 +310,9 @@ async def handler(event):
 				print(f'sms_id : {sms_id}, message_reaction : {emoji}, char :{char}')
 
 			# Читаем таблицу
+			columns = ['sms_id', 'Имя файла', 'Номер наряда', 'Пациент', 'Врач', 'Тип', 'Перевыпуск', 'Кол-во файлов', 'emoji', 'Техник', 'Характеристика', 
+							'Дата появления в чате', 'Готова фактически', 'Комментарий', 
+							'Number - ImplantLibraryEntryDescriptor']
 			df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns))
 			# df = pd.read_excel('temp.xlsx')
 			list_sms_id = df['sms_id'].tolist()
