@@ -310,7 +310,7 @@ async def handler(event):
 				print(f'sms_id : {sms_id}, message_reaction : {emoji}, char :{char}')
 
 			# Читаем таблицу
-			df = pd.DataFrame(worksheet.get_all_records())
+			df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns))
 			# df = pd.read_excel('temp.xlsx')
 			list_sms_id = df['sms_id'].tolist()
 			if sms_id in list_sms_id:
