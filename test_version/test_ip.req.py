@@ -8,6 +8,7 @@ import zipfile
 import rarfile
 import patoolib
 import pandas as pd
+import random
 
 
 import gspread
@@ -17,6 +18,11 @@ from oauth2client.service_account import ServiceAccountCredentials
 import textdistance
 
 from collections import OrderedDict
+
+from telethon.tl.functions.messages import SendMediaRequest
+from telethon.tl.types import InputMediaUploadedPhoto, MessageEntityBold, MessageEntityUnderline
+from telethon.tl.functions.channels import GetParticipantsRequest
+from telethon.tl.types import ChannelParticipantsSearch
 
 api_id = '27857864'
 api_hash = '3224d8685a163fbaafc782f30e95937f'
@@ -31,18 +37,17 @@ sh = gs.open('Botick_memory')
 worksheet = sh.sheet1
 # worksheet.clear()
 
-data = {'sms_id': [], 'Имя файла': [], 'Номер наряда': [], 'Пациент': [], 'Врач': [], 'Тип': [], 'Перевыпуск': [], 'Кол-во файлов': [], 'emoji': [], 'Техник': [], 'Характеристика': [],'Дата появления в чате': [],'Готова фактически': [],'Комментарий':[],'Number - ImplantLibraryEntryDescriptor':[]}
+data = {'emoji': [],'Номер наряда': [], 'Врач': [], 'Пациент': [], 'Тип': [], 'Количество': [], 'Цвет': [], 'Комментарий':[], 'Кол-во файлов': [],'Перевыпуск': [],  'Техник': [], 'Дата появления в чате': [],'Готова фактически': [], 'Характеристика': [], 'Имя файла': [], 'Number - ImplantLibraryEntryDescriptor':[],  'sms_id': []}
 df_ = pd.DataFrame(data)
 
-columns = ['sms_id', 'Имя файла', 'Номер наряда', 'Пациент', 'Врач', 'Тип', 'Перевыпуск', 'Кол-во файлов', 'emoji', 'Техник', 'Характеристика', 
-							'Дата появления в чате', 'Готова фактически', 'Комментарий', 
-							'Number - ImplantLibraryEntryDescriptor']
+columns = ['emoji','Номер наряда','Врач','Пациент','Тип','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник','Дата появления в чате','Готова фактически','Характеристика','Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
+
 df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns)) #получить
 #df_ = 
 set_with_dataframe(worksheet, df_)
 format_with_dataframe(worksheet, df_, include_column_header=True) #записать
 print('Google Excel Connected Successfully')
-# print(worksheet.get_all_records())
+# print(worksheet.get_all_records())	
 
 emoji_list = {'❤️':'Работа готова','🤬':'Брак конструкции (ошибка в модели)','💔':'Брак модели (проблема с печатью)','😡':'Частично в работе','🤔':'Решаем проблему',}
 client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
@@ -147,6 +152,25 @@ def is_stl_file(file_name):
     return re.search(r'\.stl$', file_name, re.IGNORECASE) is not None
 
 
+# Функция для отправки сообщения с картинкой
+async def send_image_with_text(client, chat_id, image_path, bold_text, underlined_text, reply_to):
+	message_text = f"<b>{bold_text}</b>\n<u>{underlined_text}</u>"
+	input_file = await client.upload_file(image_path)
+	await client.send_file(chat_id, file=input_file, caption=message_text, parse_mode='HTML', reply_to=reply_to)
+
+# Функция для получения участников группы
+async def get_group_participants(client, group_id):
+    participants = await client(GetParticipantsRequest(
+        channel=group_id,
+        filter=ChannelParticipantsSearch(''),
+        offset=0,
+        limit=100,
+        hash=0
+    ))
+    return {user.id: user.username for user in participants.users}
+
+
+
 @client.on(events.Raw())
 async def handler(event):
 	global message_reactions
@@ -200,29 +224,51 @@ async def handler(event):
 			else:
 				print(f"Skipping file: {file_name} (not a zip or archive)")
 
-			per = 'none'
-			if 'перевыпуск' in file_name.lower():
-				per = 'Перевыпуск'
+			
 			if file_name[0].isdigit():
 				number = file_name[0:8]
 				file_name_unix = file_name[8::]
 				result = [x for x in re.split(r'[_-]', file_name_unix) if x]
-				if len(result) == 3:
-					pac = result[0]
-					med = result[1]
-					tip = result[2][:-4]
-				elif len(result) > 3:
-					pac = result[0]
-					med = result[1]
+				print(result)
+				if len(result) == 5:
+					med = result[0]
+					pac = result[1]
 					tip = result[2]
+					col = result[3]
+					color = result[4][:-4]
+				elif len(result) == 4:
+					med = result[0]
+					pac = result[1]
+					tip = result[2]
+					col = result[3][:-4]
+					color = 'нет'
 				else:
-					pac, med, tip = 'none','none','none'
+					# тут бот должен отправить картинку с текстом, в котором одна строка жирная, а другая подчерктуна
+					pac, med, tip ,col ,color= 'none','none','none','none','none'
+					# Отправка картинки с текстом
+					random_number = random.randint(1, 11)
+					print(random_number)
+					image_path = f'img/mem{random_number}.jpg'
+					bold_text = "Некорректное заполнение, переделываем архив \n"
+					underlined_text = "НОМЕР - ДОКТОР - ПАЦИЕНТ - ТИП - КОЛИЧЕСТВО- ЦВЕТ"
+					await send_image_with_text(client, event.message.chat_id, image_path, bold_text, underlined_text,event.message.id)
+
 			else:
-				number, pac, med, tip = 'none','none','none','none'
+				number, pac, med, tip ,col ,color= 'none','none','none','none','none','none'
+				# Отправка картинки с текстом
+				random_number = random.randint(1, 11)
+				print(random_number)
+				image_path = f'img/mem{random_number}.jpg'
+				bold_text = "Некорректное заполнение, переделываем архив \n"
+				underlined_text = "НОМЕР - ДОКТОР - ПАЦИЕНТ - ТИП - КОЛИЧЕСТВО- ЦВЕТ"
+				await send_image_with_text(client, event.message.chat_id, image_path, bold_text, underlined_text,event.message.id)
 			if caption:
 				pass
 			else:
-				caption = 'Отсутсвует'     
+				caption = 'Отсутсвует'
+			per = 'Нет'
+			if 'перевыпуск' in caption.lower():
+				per = 'Перевыпуск'     
 			emoji = '⏳'
 			date_unix = datetime.datetime.now()
 			# Прибавление 3 часов
@@ -230,10 +276,11 @@ async def handler(event):
 			# Преобразование в строковый формат
 			date_normal = date_unix_plus_3_hours.strftime("%d-%m-%Y %H:%M")
 			#_____первая____запись_____документа_____
-			new_row = [message_id, file_name, number, pac, med, tip, per, count_files, emoji, 'none', 'none', date_normal,'none',caption, pares]
-			columns = ['sms_id', 'Имя файла', 'Номер наряда', 'Пациент', 'Врач', 'Тип', 'Перевыпуск', 'Кол-во файлов', 'emoji', 'Техник', 'Характеристика', 
-							'Дата появления в чате', 'Готова фактически', 'Комментарий', 
-							'Number - ImplantLibraryEntryDescriptor']
+			# new_row = [message_id, file_name, number, pac, med, tip,  emoji, 'none', 'none', date_normal,'none', pares]
+
+			new_row = [emoji,number,med, pac,  tip, col,color, caption, count_files, per, 'none', date_normal,'none','none',file_name, pares,message_id]
+			columns = ['emoji','Номер наряда','Врач','Пациент','Тип','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник','Дата появления в чате','Готова фактически','Характеристика','Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
+
 			df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns)) #получить
 			df_ = pd.DataFrame([new_row], columns=columns)
 			updated_df = pd.concat([df, df_], ignore_index=True)
@@ -242,12 +289,15 @@ async def handler(event):
 			print('Записал')
 
 	elif isinstance(event, UpdateEditChannelMessage):
+		# print(event)
 		message_id = event.message.id
 		# print(f"Channel message edited: {event}")
 		# Запоминаем id сообщения для дальнейшего использования при обработке реакций
 		message_reactions[message_id] = {'old_reactions': [], 'new_reactions': []}
 	elif isinstance(event, UpdateBotMessageReaction):
 		print(event)
+		all_users = await get_group_participants(client,-1002154104395)
+		print(all_users)
 		char = ''
 		date_finish = ''
 		date_unix = datetime.datetime.now()
@@ -256,8 +306,11 @@ async def handler(event):
 		# Преобразование в строковый формат
 		date_normal = date_unix_plus_3_hours.strftime("%d-%m-%Y %H:%M")
 		sms_id = event.msg_id
-		user_tg = event.actor.user_id
-		# print(user_tg)
+		user_id_ = event.actor.user_id
+		# user_id_ = 1223812779 #челик без никнейма
+		user_tg = all_users[user_id_]
+		if user_tg is None:
+			user_tg = user_id_
 		emoji = ''
 		list_old_e = []
 		message_id = event.msg_id
@@ -310,11 +363,9 @@ async def handler(event):
 				print(f'sms_id : {sms_id}, message_reaction : {emoji}, char :{char}')
 
 			# Читаем таблицу
-			columns = ['sms_id', 'Имя файла', 'Номер наряда', 'Пациент', 'Врач', 'Тип', 'Перевыпуск', 'Кол-во файлов', 'emoji', 'Техник', 'Характеристика', 
-							'Дата появления в чате', 'Готова фактически', 'Комментарий', 
-							'Number - ImplantLibraryEntryDescriptor']
+			columns = ['emoji','Номер наряда','Врач','Пациент','Тип','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник','Дата появления в чате','Готова фактически','Характеристика','Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
+
 			df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns))
-			# df = pd.read_excel('temp.xlsx')
 			list_sms_id = df['sms_id'].tolist()
 			if sms_id in list_sms_id:
 				row_index = list_sms_id.index(sms_id)
@@ -322,18 +373,18 @@ async def handler(event):
 				if char:
 					# print(f'{char} - {update["message_reaction"]["user"]["username"]} - {date_normal}')
 					if df['Характеристика'][row_index] == 'none':
-						df.loc[row_index, 'Характеристика'] = f'{char} from user_id: {user_tg} - {date_normal}'
+						df.loc[row_index, 'Характеристика'] = f'{char} from: {user_tg} - {date_normal}'
 					else:
-						df.loc[row_index, 'Характеристика'] = f'{df['Характеристика'][row_index]}\n{char} from user_id: {user_tg} - {date_normal}'
+						df.loc[row_index, 'Характеристика'] = f'{df['Характеристика'][row_index]}\n{char} from: {user_tg} - {date_normal}'
 				if df['Техник'][row_index] == 'none':
-					df.loc[row_index, 'Техник'] = f'user_id: {user_tg}'
+					df.loc[row_index, 'Техник'] = f'{user_tg}'
 				if date_finish:
 					df.loc[row_index, 'Готова фактически'] = f'{date_finish}'
 
 			set_with_dataframe(worksheet, df)
 			format_with_dataframe(worksheet, df, include_column_header=True) #записать
 			print('Записал Реакцию')
-			# df.to_excel('temp.xlsx', index= False )
+
 
 client.start()
 client.run_until_disconnected()
