@@ -33,14 +33,15 @@ googleJsonPath = "google_secret/client_secret.json"
 creds_sheets = ServiceAccountCredentials.from_json_keyfile_name(googleJsonPath, ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets",
          "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"])
 gs = gspread.authorize(creds_sheets)
-sh = gs.open('Botick_memory')
+# sh = gs.open('Botick_memory')
+sh = gs.open('test_bot_click')
 worksheet = sh.sheet1
 # worksheet.clear()
 
-data = {'Характеристика': [],'Номер наряда': [], 'Пациент': [], 'Врач': [],  'Тип': [], 'Готова фактически': [], 'Дата появления в чате': [],'Количество': [], 'Цвет': [], 'Комментарий':[], 'Кол-во файлов': [],'Перевыпуск': [],  'Техник': [],  'emoji': [], 'Имя файла': [], 'Number - ImplantLibraryEntryDescriptor':[],  'sms_id': []}
+data = {'Характеристика': [],'Номер наряда': [], 'Пациент': [], 'Врач': [],  'Тип': [], 'Готова фактически': [], 'Дата появления в чате': [],'Количество': [], 'Цвет': [], 'Комментарий':[], 'Кол-во файлов': [],'Перевыпуск': [], 'Исполнитель': [], 'Техник': [],  'emoji': [], 'Имя файла': [], 'Number - ImplantLibraryEntryDescriptor':[],  'sms_id': []}
 df_ = pd.DataFrame(data)
 
-columns = ['Характеристика','Номер наряда','Пациент','Врач','Тип','Готова фактически',  'Дата появления в чате','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник', 'emoji', 'Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
+columns = ['Характеристика','Номер наряда','Пациент','Врач','Тип','Готова фактически',  'Дата появления в чате','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск', 'Исполнитель', 'Техник', 'emoji', 'Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
 
 df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns)) #получить
 #df_ = 
@@ -184,6 +185,12 @@ async def handler(event):
 			document = event.message.media.document
 			file_name = document.attributes[0].file_name
 			file_id = document.id
+			user_id_ = event.message.from_id.user_id
+			all_users = await get_group_participants(client,-1002154104395)
+			user_tg = all_users[user_id_]
+			if user_tg is None:
+				user_tg = user_id_
+			print(f'user_tg>>>{user_tg}')
 
 			print(f"Document received: Title: {document.attributes[0].file_name}, ID: {document.id}, Message: {event.message.message}")
 			print(f"sms_id : {message_id}, file_name: {file_name}, Комментарий: {caption}")
@@ -278,9 +285,9 @@ async def handler(event):
 			#_____первая____запись_____документа_____
 			# new_row = [message_id, file_name, number, pac, med, tip,  emoji, 'none', 'none', date_normal,'none', pares]
 
-			new_row = ['В работе',number,med, pac,  tip, 'none', date_normal, col,color, caption, count_files, per, 'none', emoji,  file_name, pares,message_id]
+			new_row = ['В работе',number,med, pac,  tip, 'none', date_normal, col,color, caption, count_files, per, 'none',user_tg, emoji,  file_name, pares,message_id]
 			# columns = ['emoji','Номер наряда','Врач','Пациент','Тип','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник','Дата появления в чате','Готова фактически','Характеристика','Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
-			columns = ['Характеристика','Номер наряда','Пациент','Врач','Тип','Готова фактически',  'Дата появления в чате','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник', 'emoji', 'Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
+			columns = ['Характеристика','Номер наряда','Пациент','Врач','Тип','Готова фактически',  'Дата появления в чате','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Исполнитель','Техник', 'emoji', 'Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
 
 			df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns)) #получить
 			df_ = pd.DataFrame([new_row], columns=columns)
@@ -364,7 +371,7 @@ async def handler(event):
 				print(f'sms_id : {sms_id}, message_reaction : {emoji}, char :{char}')
 
 			# Читаем таблицу
-			columns = ['emoji','Номер наряда','Врач','Пациент','Тип','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник','Дата появления в чате','Готова фактически','Характеристика','Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
+			columns = ['Характеристика','Номер наряда','Пациент','Врач','Тип','Готова фактически',  'Дата появления в чате','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Исполнитель','Техник', 'emoji', 'Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
 
 			df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns))
 			list_sms_id = df['sms_id'].tolist()
@@ -377,8 +384,8 @@ async def handler(event):
 						df.loc[row_index, 'Характеристика'] = f'{char} from: {user_tg} - {date_normal}'
 					else:
 						df.loc[row_index, 'Характеристика'] = f'{df['Характеристика'][row_index]}\n{char} from: {user_tg} - {date_normal}'
-				if df['Техник'][row_index] == 'none':
-					df.loc[row_index, 'Техник'] = f'{user_tg}'
+				if df['Исполнитель'][row_index] == 'none':
+					df.loc[row_index, 'Исполнитель'] = f'{user_tg}'
 				if date_finish:
 					df.loc[row_index, 'Готова фактически'] = f'{date_finish}'
 
