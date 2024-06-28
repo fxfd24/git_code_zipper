@@ -37,10 +37,10 @@ sh = gs.open('Botick_memory')
 worksheet = sh.sheet1
 # worksheet.clear()
 
-data = {'emoji': [],'Номер наряда': [], 'Врач': [], 'Пациент': [], 'Тип': [], 'Количество': [], 'Цвет': [], 'Комментарий':[], 'Кол-во файлов': [],'Перевыпуск': [],  'Техник': [], 'Дата появления в чате': [],'Готова фактически': [], 'Характеристика': [], 'Имя файла': [], 'Number - ImplantLibraryEntryDescriptor':[],  'sms_id': []}
+data = {'Характеристика': [],'Номер наряда': [], 'Пациент': [], 'Врач': [],  'Тип': [], 'Готова фактически': [], 'Дата появления в чате': [],'Количество': [], 'Цвет': [], 'Комментарий':[], 'Кол-во файлов': [],'Перевыпуск': [],  'Техник': [],  'emoji': [], 'Имя файла': [], 'Number - ImplantLibraryEntryDescriptor':[],  'sms_id': []}
 df_ = pd.DataFrame(data)
 
-columns = ['emoji','Номер наряда','Врач','Пациент','Тип','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник','Дата появления в чате','Готова фактически','Характеристика','Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
+columns = ['Характеристика','Номер наряда','Пациент','Врач','Тип','Готова фактически',  'Дата появления в чате','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник', 'emoji', 'Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
 
 df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns)) #получить
 #df_ = 
@@ -250,7 +250,7 @@ async def handler(event):
 					print(random_number)
 					image_path = f'img/mem{random_number}.jpg'
 					bold_text = "Некорректное заполнение, переделываем архив \n"
-					underlined_text = "НОМЕР - ДОКТОР - ПАЦИЕНТ - ТИП - КОЛИЧЕСТВО- ЦВЕТ"
+					underlined_text = "НОМЕР - ПАЦИЕНТ - ВРАЧ - ТИП - КОЛИЧЕСТВО- ЦВЕТ"
 					await send_image_with_text(client, event.message.chat_id, image_path, bold_text, underlined_text,event.message.id)
 
 			else:
@@ -260,7 +260,7 @@ async def handler(event):
 				print(random_number)
 				image_path = f'img/mem{random_number}.jpg'
 				bold_text = "Некорректное заполнение, переделываем архив \n"
-				underlined_text = "НОМЕР - ДОКТОР - ПАЦИЕНТ - ТИП - КОЛИЧЕСТВО- ЦВЕТ"
+				underlined_text = "НОМЕР - ПАЦИЕНТ - ВРАЧ - ТИП - КОЛИЧЕСТВО- ЦВЕТ"
 				await send_image_with_text(client, event.message.chat_id, image_path, bold_text, underlined_text,event.message.id)
 			if caption:
 				pass
@@ -278,8 +278,9 @@ async def handler(event):
 			#_____первая____запись_____документа_____
 			# new_row = [message_id, file_name, number, pac, med, tip,  emoji, 'none', 'none', date_normal,'none', pares]
 
-			new_row = [emoji,number,med, pac,  tip, col,color, caption, count_files, per, 'none', date_normal,'none','none',file_name, pares,message_id]
-			columns = ['emoji','Номер наряда','Врач','Пациент','Тип','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник','Дата появления в чате','Готова фактически','Характеристика','Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
+			new_row = ['В работе',number,med, pac,  tip, 'none', date_normal, col,color, caption, count_files, per, 'none', emoji,  file_name, pares,message_id]
+			# columns = ['emoji','Номер наряда','Врач','Пациент','Тип','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник','Дата появления в чате','Готова фактически','Характеристика','Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
+			columns = ['Характеристика','Номер наряда','Пациент','Врач','Тип','Готова фактически',  'Дата появления в чате','Количество','Цвет','Комментарий','Кол-во файлов','Перевыпуск','Техник', 'emoji', 'Имя файла','Number - ImplantLibraryEntryDescriptor','sms_id']
 
 			df = pd.DataFrame(worksheet.get_all_records(expected_headers = columns)) #получить
 			df_ = pd.DataFrame([new_row], columns=columns)
@@ -372,7 +373,7 @@ async def handler(event):
 				df.loc[row_index, 'emoji'] = emoji
 				if char:
 					# print(f'{char} - {update["message_reaction"]["user"]["username"]} - {date_normal}')
-					if df['Характеристика'][row_index] == 'none':
+					if df['Характеристика'][row_index] == 'В работе':
 						df.loc[row_index, 'Характеристика'] = f'{char} from: {user_tg} - {date_normal}'
 					else:
 						df.loc[row_index, 'Характеристика'] = f'{df['Характеристика'][row_index]}\n{char} from: {user_tg} - {date_normal}'
