@@ -1,0 +1,9 @@
+Бот группа печать
+api_id = '27857864'
+api_hash = '3224d8685a163fbaafc782f30e95937f'
+bot_token = '7372987398:AAFpA4weK_NXtCjrn5gnmeFp3lVwE_RVw0s'
+
+Бот группа фрезер
+api_id = '27857864'
+api_hash = '3224d8685a163fbaafc782f30e95937f'
+bot_token = '7101677382:AAHfkFvVcMKqusD-PoUKzTmbvPqEARL5l0s'
