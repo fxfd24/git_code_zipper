@@ -297,7 +297,7 @@ async def handler(event):
 		message_reactions[message_id] = {'old_reactions': [], 'new_reactions': []}
 	elif isinstance(event, UpdateBotMessageReaction):
 		print(event)
-		all_users = await get_group_participants(client,-1002154104395)
+		all_users = await get_group_participants(client,-1002160755056)
 		print(all_users)
 		char = ''
 		date_finish = ''
