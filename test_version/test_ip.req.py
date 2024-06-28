@@ -34,7 +34,7 @@ creds_sheets = ServiceAccountCredentials.from_json_keyfile_name(googleJsonPath, 
          "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"])
 gs = gspread.authorize(creds_sheets)
 # sh = gs.open('Botick_memory')
-sh = gs.open('test_bot_click')
+sh = gs.open('Botick_memory')
 worksheet = sh.sheet1
 # worksheet.clear()
 
